@@ -12,7 +12,6 @@ export class GameMap extends SizedMatrix {
 
 	push(figure: Figure) {
 		if (this.figures.indexOf(figure) != -1) return this;
-
 		this.figures.push(figure);
 		return this;
 	}
@@ -26,7 +25,7 @@ export class GameMap extends SizedMatrix {
 	}
 
 	clear() {
-		this.figures.slice(0);
+		this.figures = [];
 		return this;
 	}
 
@@ -38,5 +37,33 @@ export class GameMap extends SizedMatrix {
 			// получаем точку фигуры на карте и фиксируем ее значение. Саму фигуру удаляем
 			this.set(new Point(x + figure.x, y + figure.y), value);
 		}
+	}
+	// Очиащем нижнюю линию, если она полная b сдвигаем все элементы на 1 вниз
+	clearLines() {
+		let counter = 0;
+		for (let y = 0; y < this.height; y++) {
+			// если все элементы в строке заполнены, то очищаем строку и сдвигаем все элементы на 1 вниз
+			if (this.getRow(y).every(Boolean)) {
+				this.clearLine(y);
+				this.moveLinesDown(y);
+				counter++;
+			}
+		}
+		return counter;
+	}
+
+	clearLine(y: number) {
+		this.setRow(
+			y,
+			this.getRow(y).map(() => 0)
+		);
+	}
+	// сдвигаем все элементы на 1 вниз, которые выше y
+	moveLinesDown(y: number) {
+		// Замечу, что самый верх карты y = 0
+		for (let i = y - 1; i >= 0; i--) {
+			this.setRow(i + 1, this.getRow(i));
+		}
+		this.clearLine(0);
 	}
 }

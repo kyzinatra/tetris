@@ -1,16 +1,15 @@
 import { Figure } from "../figures/figure";
 import { GameMap } from "./map";
 import { GameRenderer } from "./renderer";
-import { JFigure, getRandomFigure } from "../constants/figures";
+import { getRandomFigure } from "../constants/figures";
 import { makeKeysListeners } from "../controllers/keys";
 
-JFigure;
 export class GameEngine {
 	// Ставим счетчики на текущий счет, рекорд и сколько всего удалено линий
 	#score = 0;
 	#highScore = +(localStorage.getItem("highscore") ?? 0);
 	#deletedLines = 0;
-	#pause = false;
+	#pause = true;
 	#work = false;
 
 	#renderedFigures = 0;
@@ -21,6 +20,7 @@ export class GameEngine {
 	}
 	set score(value) {
 		this.#score = value;
+		this.scoreElement.querySelector("span")!.textContent = `${value}`;
 	}
 
 	get lines() {
@@ -28,11 +28,21 @@ export class GameEngine {
 	}
 	set lines(value) {
 		this.#deletedLines = value;
+		this.linesElement.querySelector("span")!.textContent = `${value}`;
+	}
+
+	get highScore() {
+		return this.#highScore;
+	}
+	set highScore(value) {
+		this.#highScore = value;
+		this.highScoreElement.querySelector("span")!.textContent = `${value}`;
+		localStorage.setItem("highscore", `${value}`);
 	}
 
 	// Скорость падения фигурки
 	get speed() {
-		return 600 + ~~(this.#deletedLines / 10) * 15;
+		return 600 + ~~this.#deletedLines * 15;
 	}
 
 	// Создаем объект с названиями клавиш и их кодами. makeKeysListeners - отслеживает нажатие клавиш
@@ -41,9 +51,10 @@ export class GameEngine {
 		leftMove: ["ArrowLeft", "KeyA"],
 		rotate: ["ArrowUp", "KeyW"],
 		downMove: ["ArrowDown", "KeyS"],
-		drop: ["Space", "KeyF"],
+		drop: ["Tab", "KeyF"],
 		pause: ["Escape", "KeyP"],
 		restart: ["KeyR"],
+		hold: ["Space", "KeyE"],
 	});
 
 	// Элементы информации
@@ -51,25 +62,30 @@ export class GameEngine {
 	highScoreElement = document.getElementById("highScore") as HTMLParagraphElement;
 	linesElement = document.getElementById("lines") as HTMLParagraphElement;
 	pauseElement = document.getElementById("pause") as HTMLButtonElement;
+	contentElement = document.getElementById("content") as HTMLDivElement;
 
 	// Создаем карту и превью элемента (следующий элемент)
 	map = new GameMap();
 	preview = new GameMap(4, 4);
+	hold = new GameMap(4, 4);
 
 	mapRenderer: GameRenderer | null = null;
 	previewRenderer: GameRenderer | null = null;
+	holdRenderer: GameRenderer | null = null;
 
 	currentFigure: Figure | null = null;
 	nextFigure: Figure | null = null;
 
-	renderFigure() {
+	newFigure(x?: number, y?: number) {
+		if (this.nextFigure) this.preview.remove(this.nextFigure);
+
 		this.currentFigure = this.nextFigure ?? getRandomFigure(this.#renderedFigures++);
 		this.nextFigure = getRandomFigure(this.#renderedFigures++);
 
-		const x = 4;
-		const y = 0;
+		const newX = x || 4;
+		const newY = y || 0;
 
-		this.map.push(this.currentFigure.setPosition(x, y));
+		this.map.push(this.currentFigure.setPosition(newX, newY));
 		this.preview.clear()!.push(this.nextFigure);
 	}
 
@@ -78,19 +94,23 @@ export class GameEngine {
 		// ищем элемент по селектору
 		const app = document.querySelector(appSelector) as HTMLCanvasElement;
 		const preview = document.querySelector("#canvas_preview") as HTMLCanvasElement;
+		const hold = document.getElementById("canvas_hold") as HTMLCanvasElement;
+
 		// если элемент не найден, то выкидываем ошибку
 		if (!app) throw new Error("App element not found");
 
 		// создаем рендереры
 		this.mapRenderer = new GameRenderer(this.map, app);
 		this.previewRenderer = new GameRenderer(this.preview, preview, false);
+		this.holdRenderer = new GameRenderer(this.hold, hold, false);
 
 		// Первый рендер фигур
 		this.mapRenderer.render();
 		this.previewRenderer.render();
+		this.holdRenderer.render();
 
 		// создаем фигуры
-		this.renderFigure();
+		this.newFigure();
 
 		// обновляем счетчик лучшего результата
 		this.highScoreElement.querySelector("span")!.textContent = `${this.#highScore}`;
@@ -98,6 +118,7 @@ export class GameEngine {
 		// добавляем обработчики событий на изменение размера окна и потерю фокуса
 		addEventListener("resize", this.resize.bind(this, app));
 		addEventListener("blur", () => (this.#pause = true));
+		this.contentElement.addEventListener("click", () => (this.#pause = !this.#pause));
 		this.pauseElement.addEventListener("click", () => (this.#pause = !this.#pause));
 	}
 
@@ -134,57 +155,91 @@ export class GameEngine {
 	}
 
 	checkPause() {
-		const show = "show";
-		const { classList } = this.pauseElement;
+		// Ставим класс show на кнопку паузы, если игра на паузе
+		const pause = "pause";
+		const { classList } = this.contentElement;
 
-		if (this.#pause && !classList.contains(show)) classList.add(show);
-		if (!this.#pause && classList.contains(show)) classList.remove(show);
+		if (this.#pause && !classList.contains(pause)) classList.add(pause);
+		if (!this.#pause && classList.contains(pause)) classList.remove(pause);
 	}
 
+	swipeFigure() {
+		if (!this.hold.figures.length) {
+			this.hold.push(this.currentFigure!.clone());
+			this.map.remove(this.currentFigure!);
+			this.newFigure(this.currentFigure!.x, this.currentFigure!.y);
+		} else {
+			const holden = this.hold.figures[0].clone().setPosition(this.currentFigure!.x, this.currentFigure!.y);
+			this.hold.clear();
+			this.hold.push(this.currentFigure!.clone());
+			this.map.remove(this.currentFigure!);
+			this.map.push(holden);
+			this.currentFigure = holden;
+		}
+	}
+
+	// Тут происходит обработка действий пользователя и рендер
 	tick(time: number = performance.now()) {
 		if (!this.#work) return;
 
+		// сразу просим следующий кадр
 		requestAnimationFrame(this.tick.bind(this));
-		let pressDelay = 60;
-		const { leftMove, restart, pause, rightMove, rotate, downMove } = this.#keys;
 
-		if (pause.isSingle(pressDelay)) this.#pause = !this.#pause;
+		const { leftMove, restart, pause, rightMove, rotate, downMove, drop, hold } = this.#keys;
+
+		// Если игра на паузе, то делать нечего не нужно
+		if (pause.isSingle()) this.#pause = !this.#pause;
+		this.checkPause();
+		if (this.#pause) return;
+
+		let speed = this.speed; // скорость падения фигурки
+
 		if (restart.isDown()) this.restart();
-
-		if (this.#pause) return this.checkPause();
-
-		let speed = this.speed;
-
 		if (downMove.isDown()) speed *= 10;
 
-		console.log(this.currentFigure?.x, this.currentFigure?.y);
-		if (rotate.isSingle(pressDelay)) this.currentFigure!.rotate();
-		if (leftMove.isSingle(pressDelay)) this.currentFigure?.move(-1, 0);
-		if (rightMove.isSingle(pressDelay)) this.currentFigure?.move(1, 0);
+		// Простые проверки на нажатие клавиш и вызов соответствующих методов
+		if (rotate.isSingle()) this.currentFigure!.rotate();
+		if (leftMove.isSingle()) this.currentFigure?.move(-1, 0);
+		if (rightMove.isSingle()) this.currentFigure?.move(1, 0);
+		if (drop.isSingle()) {
+			this.currentFigure?.drop(this.map);
+			time = this.#lastMoveTime + 600000 / speed; // чтобы сразу проверить столкновение
+		}
 
+		if (hold.isSingle()) this.swipeFigure();
+
+		// Проверка на столкновение со стенками
+		if (this.currentFigure?.haveCollision(this.map)) this.currentFigure?.back();
+
+		// Тут проверка на фиксацию фигурки и окончание игры
 		if (time >= this.#lastMoveTime + 600000 / speed) {
+			// Если прошло больше чем 600000 / speed , то фигурка падает вниз на 1 клетку
 			this.currentFigure?.move(0, 1);
 			this.#lastMoveTime = time;
 
+			// Если фигурка столкнулась с чем-то, то фиксируем ее на карте
 			if (this.currentFigure?.haveCollision(this.map)) {
 				this.currentFigure.back();
 
+				// Если фигурка столкнулась с верхней границей, то игра окончена
 				if (this.currentFigure.haveTopCollision(this.map)) {
 					this.stop();
 					alert("Game over");
-					location.reload();
-					return;
+					return this.restart();
 				}
 
+				// Если фигурка столкнулась с чем-то, то фиксируем ее на карте
 				this.map.fix(this.currentFigure);
-				this.renderFigure();
-				this.#score += 1000;
+				const deleted = this.map.clearLines();
+				this.newFigure();
+				this.score += 1000;
+				this.lines += deleted;
+				this.highScore = Math.max(+(localStorage.getItem("highscore") || 0), this.score);
 			}
 		}
 
-		if (this.currentFigure?.haveCollision(this.map)) this.currentFigure?.back();
-
 		this.mapRenderer!.render();
 		this.previewRenderer!.render();
+		this.holdRenderer!.render();
 	}
 }

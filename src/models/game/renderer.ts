@@ -38,12 +38,13 @@ export class GameRenderer {
 			ctx.strokeStyle = "#dddddd";
 			ctx.fillStyle = color;
 			ctx.strokeRect(X, Y, size, size);
-			ctx.fillRect(X + 1, Y + 1, size - 1, size - 1);
+			ctx.fillRect(X, Y, size - 1, size - 1);
 
 			ctx.closePath();
 		}
 
 		// Рисуем фигуры
+		console.log(map.figures);
 		for (let figure of map.figures) {
 			let { x: vX, y: vY } = figure;
 
@@ -60,7 +61,7 @@ export class GameRenderer {
 
 				ctx.strokeStyle = "#dddddd";
 				ctx.fillStyle = color;
-				ctx.fillRect(x + vX + 1, y + vY + 1, size - 1, size - 1);
+				ctx.fillRect(x + vX, y + vY, size - 1, size - 1);
 
 				ctx.closePath();
 			}

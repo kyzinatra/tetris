@@ -47,8 +47,16 @@ export class SizedMatrix {
 		return this.map[this.index(index)];
 	}
 
+	getRow(y: number) {
+		return this.map.slice(y * this.width, (y + 1) * this.width);
+	}
+
 	set(index: number | Point, value: number): number {
 		return (this.map[this.index(index)] = value | 0);
+	}
+
+	setRow(y: number, row: number[] | Uint8Array) {
+		return this.map.set(row, y * this.width);
 	}
 
 	matrix() {

@@ -11,6 +11,6 @@ export const TFigure = Figure.make("###", "0#0");
 
 export const figures = [LFigure, JFigure, IFigure, ZFigure, SFigure, OFigure, TFigure];
 
-export function getRandomFigure(seed: number): Figure {
-	return figures[random(0, figures.length - 1)];
+export function getRandomFigure(_seed: number): Figure {
+	return figures[random(0, figures.length - 1)].clone();
 }

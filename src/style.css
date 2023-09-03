@@ -3,8 +3,9 @@
 		"Open Sans", "Helvetica Neue", sans-serif;
 	line-height: 1.5;
 	font-weight: 400;
+	font-size: large;
 
-	color-scheme: light dark;
+	color-scheme: dark;
 	color: rgba(255, 255, 255, 0.87);
 	background-color: #242424;
 
@@ -29,10 +30,56 @@ a:hover {
 }
 
 body {
-	margin: 0;
-	display: flex;
-	place-items: center;
-	min-width: 320px;
 	min-height: 100vh;
-	/* overflow: hidden; */
+	overflow: hidden;
+}
+
+#app {
+	display: flex;
+	margin: 0 auto;
+	justify-content: center;
+}
+
+#side {
+	position: absolute;
+	left: 70%;
+}
+
+.controls {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	margin-top: 20px;
+}
+
+.controls button {
+	padding: 10px 20px;
+	border: none;
+	border-radius: 5px;
+	background-color: #646cff;
+	color: #fff;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.controls button:hover {
+	background-color: #535bf2;
+}
+
+#content {
+	position: relative;
+}
+#content.pause::before {
+	content: url("https://img.icons8.com/ios-filled/50/dddddd/play--v1.png");
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	z-index: 2;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: rgba(50, 50, 50, 0.5);
+	cursor: pointer;
 }

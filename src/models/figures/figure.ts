@@ -15,6 +15,19 @@ export class Figure extends SizedMatrix {
 		height: this.height,
 	};
 
+	clone() {
+		const figure = new Figure(this.width, this.height);
+		figure.map = this.clonedMap;
+		return figure;
+	}
+
+	cloneWithCoords() {
+		const figure = this.clone();
+		figure.x = this.x;
+		figure.y = this.y;
+		return figure;
+	}
+
 	// Создает фигуру по шаблону
 	static make(...rows: string[]) {
 		const figure = new Figure(Math.max(...rows.map((a) => a.length)), rows.length);
@@ -70,6 +83,14 @@ export class Figure extends SizedMatrix {
 
 		this.x += x;
 		this.y += y;
+	}
+
+	drop(map: GameMap) {
+		this.save();
+		while (!this.haveCollision(map)) {
+			this.y++;
+		}
+		this.y--;
 	}
 
 	setPosition(x: number, y: number) {

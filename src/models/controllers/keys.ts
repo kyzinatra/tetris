@@ -12,6 +12,7 @@ interface IKeys {
 const keymap = new Map<string, boolean>();
 document.addEventListener("keydown", (e) => {
 	keymap.set(e.code, true);
+	e.preventDefault();
 });
 document.addEventListener("keyup", (e) => {
 	keymap.set(e.code, false);
@@ -49,7 +50,7 @@ export class KeyController {
 	}
 
 	// чтобы не было задвоения нажатий проверяем была ли клавиша нажата ранее
-	isSingle(delay: number) {
+	isSingle() {
 		let flag = false;
 		if (!this.#pressed && this.isDown()) flag = true;
 		this.isDown();
