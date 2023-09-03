@@ -28,6 +28,8 @@ export function makeKeysListeners<T extends Partial<IKeys>>(keys: T) {
 }
 
 export class KeyController {
+	#pressed: boolean = false; // время последнего нажатия
+
 	// принимаем отслеживаемую клавишу
 	constructor(private keys: string[]) {
 		this.keys = keys;
@@ -35,11 +37,22 @@ export class KeyController {
 
 	// проверяем нажата ли клавиша
 	isDown() {
-		return this.keys.some((key) => keymap.get(key));
+		const isDown = this.keys.some((key) => keymap.get(key));
+		if (isDown) this.#pressed = true;
+		else this.#pressed = false;
+		return isDown;
 	}
 
 	// проверяем отпущена ли клавиша
 	isUp() {
 		return !this.isDown();
+	}
+
+	// чтобы не было задвоения нажатий проверяем была ли клавиша нажата ранее
+	isSingle(delay: number) {
+		let flag = false;
+		if (!this.#pressed && this.isDown()) flag = true;
+		this.isDown();
+		return flag;
 	}
 }

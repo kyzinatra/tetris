@@ -1,7 +1,8 @@
 import { Figure } from "../figures/figure";
 import { GameMap } from "./map";
 import { GameRenderer } from "./renderer";
-import { JFigure } from "../constants/figures";
+import { JFigure, getRandomFigure } from "../constants/figures";
+import { makeKeysListeners } from "../controllers/keys";
 
 JFigure;
 export class GameEngine {
@@ -13,6 +14,7 @@ export class GameEngine {
 	#work = false;
 
 	#renderedFigures = 0;
+	#lastMoveTime = performance.now();
 
 	get score() {
 		return this.#score;
@@ -33,16 +35,16 @@ export class GameEngine {
 		return 600 + ~~(this.#deletedLines / 10) * 15;
 	}
 
-	// // Создаем объект с названиями клавиш и их кодами. makeKeysListeners - отслеживает нажатие клавиш
-	// #keys = makeKeysListeners({
-	// 	rightMove: ["ArrowRight", "KeyD"],
-	// 	leftMove: ["ArrowLeft", "KeyA"],
-	// 	rotate: ["ArrowUp", "KeyW"],
-	// 	downMove: ["ArrowDown", "KeyS"],
-	// 	drop: ["Space", "KeyF"],
-	// 	pause: ["Escape", "KeyP"],
-	// 	restart: ["KeyR"],
-	// });
+	// Создаем объект с названиями клавиш и их кодами. makeKeysListeners - отслеживает нажатие клавиш
+	#keys = makeKeysListeners({
+		rightMove: ["ArrowRight", "KeyD"],
+		leftMove: ["ArrowLeft", "KeyA"],
+		rotate: ["ArrowUp", "KeyW"],
+		downMove: ["ArrowDown", "KeyS"],
+		drop: ["Space", "KeyF"],
+		pause: ["Escape", "KeyP"],
+		restart: ["KeyR"],
+	});
 
 	// Элементы информации
 	scoreElement = document.getElementById("score") as HTMLParagraphElement;
@@ -61,17 +63,14 @@ export class GameEngine {
 	nextFigure: Figure | null = null;
 
 	renderFigure() {
-		this.currentFigure = this.nextFigure ?? Figure.getRandomFigure(this.#renderedFigures++);
-		this.nextFigure = Figure.getRandomFigure(this.#renderedFigures++);
+		this.currentFigure = this.nextFigure ?? getRandomFigure(this.#renderedFigures++);
+		this.nextFigure = getRandomFigure(this.#renderedFigures++);
 
-		const x = 5;
-		const y = 2;
+		const x = 4;
+		const y = 0;
 
 		this.map.push(this.currentFigure.setPosition(x, y));
 		this.preview.clear()!.push(this.nextFigure);
-
-		this.mapRenderer!.render();
-		this.previewRenderer!.render();
 	}
 
 	// конструктор new
@@ -84,7 +83,7 @@ export class GameEngine {
 
 		// создаем рендереры
 		this.mapRenderer = new GameRenderer(this.map, app);
-		this.previewRenderer = new GameRenderer(this.preview, preview);
+		this.previewRenderer = new GameRenderer(this.preview, preview, false);
 
 		// Первый рендер фигур
 		this.mapRenderer.render();
@@ -97,6 +96,7 @@ export class GameEngine {
 		this.highScoreElement.querySelector("span")!.textContent = `${this.#highScore}`;
 
 		// добавляем обработчики событий на изменение размера окна и потерю фокуса
+		addEventListener("resize", this.resize.bind(this, app));
 		addEventListener("blur", () => (this.#pause = true));
 		this.pauseElement.addEventListener("click", () => (this.#pause = !this.#pause));
 	}
@@ -109,14 +109,82 @@ export class GameEngine {
 		this.tick();
 	}
 
+	resize(elem: HTMLCanvasElement) {
+		const { width, height } = this.map;
+
+		const size = ~~(document.documentElement.clientHeight / height);
+
+		const wSize = width * size;
+		const hSize = height * size;
+
+		// set canvas size
+		elem.width = wSize;
+		elem.height = hSize;
+		elem.style.width = `${wSize}px`;
+		elem.style.height = `${hSize}px`;
+		this.mapRenderer!.size = size;
+	}
+
 	stop() {
 		this.#work = false;
 	}
 
-	tick(_time?: number) {
+	restart() {
+		window.location.reload();
+	}
+
+	checkPause() {
+		const show = "show";
+		const { classList } = this.pauseElement;
+
+		if (this.#pause && !classList.contains(show)) classList.add(show);
+		if (!this.#pause && classList.contains(show)) classList.remove(show);
+	}
+
+	tick(time: number = performance.now()) {
 		if (!this.#work) return;
+
+		requestAnimationFrame(this.tick.bind(this));
+		let pressDelay = 60;
+		const { leftMove, restart, pause, rightMove, rotate, downMove } = this.#keys;
+
+		if (pause.isSingle(pressDelay)) this.#pause = !this.#pause;
+		if (restart.isDown()) this.restart();
+
+		if (this.#pause) return this.checkPause();
+
+		let speed = this.speed;
+
+		if (downMove.isDown()) speed *= 10;
+
+		console.log(this.currentFigure?.x, this.currentFigure?.y);
+		if (rotate.isSingle(pressDelay)) this.currentFigure!.rotate();
+		if (leftMove.isSingle(pressDelay)) this.currentFigure?.move(-1, 0);
+		if (rightMove.isSingle(pressDelay)) this.currentFigure?.move(1, 0);
+
+		if (time >= this.#lastMoveTime + 600000 / speed) {
+			this.currentFigure?.move(0, 1);
+			this.#lastMoveTime = time;
+
+			if (this.currentFigure?.haveCollision(this.map)) {
+				this.currentFigure.back();
+
+				if (this.currentFigure.haveTopCollision(this.map)) {
+					this.stop();
+					alert("Game over");
+					location.reload();
+					return;
+				}
+
+				this.map.fix(this.currentFigure);
+				this.renderFigure();
+				this.#score += 1000;
+			}
+		}
+
+		if (this.currentFigure?.haveCollision(this.map)) this.currentFigure?.back();
+
 		this.mapRenderer!.render();
 		this.previewRenderer!.render();
-		requestAnimationFrame(this.tick.bind(this));
 	}
 }

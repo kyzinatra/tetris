@@ -2,7 +2,7 @@ import { Figure } from "../figures/figure";
 import { GameMap } from "./map";
 
 export class GameRenderer {
-	size: number = 30; // c
+	size: number = 30; // размер клетки в пикселях
 	ctx: CanvasRenderingContext2D;
 
 	constructor(private map: GameMap, private elem: HTMLCanvasElement, stratch = true) {

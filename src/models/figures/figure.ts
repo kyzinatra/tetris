@@ -11,6 +11,8 @@ export class Figure extends SizedMatrix {
 		x: this.x,
 		y: this.y,
 		map: this.map,
+		width: this.width,
+		height: this.height,
 	};
 
 	// Создает фигуру по шаблону
@@ -24,24 +26,10 @@ export class Figure extends SizedMatrix {
 		return figure;
 	}
 
-	// Создает случайную фигуру 3х3
-	static getRandomFigure(_seed: number) {
-		const isFull = (coff: number) => (Math.random() > 0.5 - coff ? "0" : "#");
-		const repeat = () => {
-			const f = isFull(0);
-			const s = isFull(f == "#" ? 0.2 : 0);
-			const t = isFull(s == "#" && f == "#" ? 0.4 : 0);
-			return f + s + t;
-		};
-
-		const figure = Figure.make(repeat(), repeat(), repeat());
-
-		return figure;
-	}
-
 	// Поворачивает фигуру на 90 градусов
 	rotate() {
 		const { width, height } = this;
+		this.save();
 		// Разворачиваем и размеры новой матрицы
 		const newFigure = new Figure(height, width);
 
@@ -52,7 +40,9 @@ export class Figure extends SizedMatrix {
 			newFigure.set(new Point(newX, newY), value);
 		}
 
-		return newFigure;
+		this.map = newFigure.map;
+		this.width = newFigure.width;
+		this.height = newFigure.height;
 	}
 
 	save() {
@@ -60,6 +50,8 @@ export class Figure extends SizedMatrix {
 			x: this.x,
 			y: this.y,
 			map: this.clonedMap,
+			width: this.width,
+			height: this.height,
 		};
 		return this;
 	}
@@ -68,6 +60,8 @@ export class Figure extends SizedMatrix {
 		this.x = this.prevState.x;
 		this.y = this.prevState.y;
 		this.map = this.prevState.map;
+		this.width = this.prevState.width;
+		this.height = this.prevState.height;
 		return this;
 	}
 
@@ -76,12 +70,12 @@ export class Figure extends SizedMatrix {
 
 		this.x += x;
 		this.y += y;
-		return this;
 	}
 
 	setPosition(x: number, y: number) {
 		this.x = x;
 		this.y = y;
+		this.save();
 		return this;
 	}
 	haveCollision(map: GameMap) {
@@ -93,7 +87,21 @@ export class Figure extends SizedMatrix {
 
 			if (mapX < 0 || mapX >= map.width) return true;
 
-			if (mapY < 0 || mapY >= map.height) return true;
+			if (mapY >= map.height) return true;
+
+			if (map.get(new Point(mapX, mapY))) return true;
+		}
+		return false;
+	}
+
+	haveTopCollision(map: GameMap) {
+		for (let [x, y, value] of this.entries()) {
+			if (!value) continue;
+
+			const mapX = this.x + x;
+			const mapY = this.y + y;
+
+			if (mapY < 0 || map.get(new Point(mapX, mapY))) return true;
 		}
 		return false;
 	}

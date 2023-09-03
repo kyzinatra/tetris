@@ -19,7 +19,7 @@ export class GameMap extends SizedMatrix {
 
 	remove(figure: Figure) {
 		const index = this.figures.indexOf(figure);
-		if (index == -1) throw new Error("Figure not found");
+		if (index == -1) return this;
 
 		this.figures.splice(index, 1);
 		return this;
@@ -34,6 +34,7 @@ export class GameMap extends SizedMatrix {
 	fix(figure: Figure) {
 		this.remove(figure);
 		for (let [x, y, value] of figure.entries()) {
+			if (this.get(new Point(x + figure.x, y + figure.y))) continue;
 			// получаем точку фигуры на карте и фиксируем ее значение. Саму фигуру удаляем
 			this.set(new Point(x + figure.x, y + figure.y), value);
 		}

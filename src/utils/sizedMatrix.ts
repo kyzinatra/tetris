@@ -36,7 +36,7 @@ export class SizedMatrix {
 	index(index: number | Point): number {
 		if (index instanceof Point) {
 			const { x, y } = index;
-			if (x < 0 || x >= this.width || y < 0 || y >= this.height) throw new Error("Index out of range");
+			if (x < 0 || x >= this.width || y < 0 || y >= this.height) return -1;
 
 			return y * this.width + x;
 		}
