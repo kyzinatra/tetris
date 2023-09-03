@@ -82,8 +82,9 @@ export class GameEngine {
 		this.currentFigure = this.nextFigure ?? getRandomFigure(this.#renderedFigures++);
 		this.nextFigure = getRandomFigure(this.#renderedFigures++);
 
-		const newX = x || 4;
-		const newY = y || 0;
+		let newX = x || 4;
+		let newY = y || 0;
+		if (newX > this.map.width - 4) newX = this.map.width - 4;
 
 		this.map.push(this.currentFigure.setPosition(newX, newY));
 		this.preview.clear()!.push(this.nextFigure);
@@ -169,6 +170,8 @@ export class GameEngine {
 			this.map.remove(this.currentFigure!);
 			this.newFigure(this.currentFigure!.x, this.currentFigure!.y);
 		} else {
+			const newX = this.currentFigure!.x > this.map.width - 4 ? this.map.width - 4 : this.currentFigure!.x;
+
 			const holden = this.hold.figures[0].clone().setPosition(this.currentFigure!.x, this.currentFigure!.y);
 			this.hold.clear();
 			this.hold.push(this.currentFigure!.clone());
