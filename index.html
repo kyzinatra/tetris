@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" type="image/svg+xml" href="/vite.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="/src/style.css" />
+		<title>Тетрис</title>
+	</head>
+	<body>
+		<div id="app">
+			<div id="content">
+				<canvas id="canvas_game"></canvas>
+			</div>
+			<div id="side">
+				<p id="score">Счет: <span>0</span></p>
+				<p id="lines">Удаленные линии: <span>0</span></p>
+				<p id="highScore">Лучший результат: <span>0</span></p>
+				<canvas id="canvas_preview"></canvas>
+				<button id="pause">Пауза</button>
+				<a href="https://github.com/kyzinatra">Страничка автора</a>
+			</div>
+		</div>
+		<script type="module" src="/src/index.ts"></script>
+	</body>
+</html>

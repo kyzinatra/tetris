@@ -1,0 +1,16 @@
+{
+	"name": "tetris_lab",
+	"private": true,
+	"version": "1.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"tsc": "tsc",
+		"build": "tsc && vite build",
+		"preview": "vite preview"
+	},
+	"devDependencies": {
+		"typescript": "^5.2.2",
+		"vite": "^4.4.5"
+	}
+}
