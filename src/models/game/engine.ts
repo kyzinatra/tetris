@@ -172,7 +172,7 @@ export class GameEngine {
 		} else {
 			const newX = this.currentFigure!.x > this.map.width - 4 ? this.map.width - 4 : this.currentFigure!.x;
 
-			const holden = this.hold.figures[0].clone().setPosition(this.currentFigure!.x, this.currentFigure!.y);
+			const holden = this.hold.figures[0].clone().setPosition(newX, this.currentFigure!.y);
 			this.hold.clear();
 			this.hold.push(this.currentFigure!.clone());
 			this.map.remove(this.currentFigure!);
