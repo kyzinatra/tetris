@@ -93,6 +93,19 @@ export class Figure extends SizedMatrix {
 		this.y--;
 	}
 
+	pushInBounds(map: GameMap) {
+		this.save();
+		for (let [x, _, value] of this.entries()) {
+			if (!value) continue;
+
+			const mapX = this.x + x;
+
+			if (mapX < 0) this.x++;
+			if (mapX >= map.width) this.x--;
+		}
+		return this;
+	}
+
 	setPosition(x: number, y: number) {
 		this.x = x;
 		this.y = y;

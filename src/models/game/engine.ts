@@ -84,9 +84,8 @@ export class GameEngine {
 
 		let newX = x || 4;
 		let newY = y || 0;
-		if (newX > this.map.width - 4) newX = this.map.width - 4;
 
-		this.map.push(this.currentFigure.setPosition(newX, newY));
+		this.map.push(this.currentFigure.setPosition(newX, newY).pushInBounds(this.map));
 		this.preview.clear()!.push(this.nextFigure);
 	}
 
@@ -170,9 +169,8 @@ export class GameEngine {
 			this.map.remove(this.currentFigure!);
 			this.newFigure(this.currentFigure!.x, this.currentFigure!.y);
 		} else {
-			const newX = this.currentFigure!.x > this.map.width - 4 ? this.map.width - 4 : this.currentFigure!.x;
-
-			const holden = this.hold.figures[0].clone().setPosition(newX, this.currentFigure!.y);
+			const { x, y } = this.currentFigure!;
+			const holden = this.hold.figures[0].clone().setPosition(x, y).pushInBounds(this.map);
 			this.hold.clear();
 			this.hold.push(this.currentFigure!.clone());
 			this.map.remove(this.currentFigure!);
