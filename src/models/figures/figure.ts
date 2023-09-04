@@ -1,5 +1,5 @@
-import { random } from "../../utils/random";
 import { SizedMatrix } from "../../utils/sizedMatrix";
+import { colors } from "../constants/colors";
 import { GameMap } from "../game/map";
 import { Point } from "./point";
 
@@ -29,9 +29,9 @@ export class Figure extends SizedMatrix {
 	}
 
 	// Создает фигуру по шаблону
-	static make(...rows: string[]) {
+	static make(color: number, ...rows: string[]) {
 		const figure = new Figure(Math.max(...rows.map((a) => a.length)), rows.length);
-		const color = random(0, 255);
+
 		for (let [x, y] of figure.entries()) {
 			const value = rows[y][x] != " " && rows[y][x] != "0";
 			figure.set(new Point(x, y), value ? color : 0);
@@ -56,6 +56,7 @@ export class Figure extends SizedMatrix {
 		this.map = newFigure.map;
 		this.width = newFigure.width;
 		this.height = newFigure.height;
+		return this;
 	}
 
 	save() {
@@ -99,10 +100,10 @@ export class Figure extends SizedMatrix {
 			if (!value) continue;
 
 			const mapX = this.x + x;
-
 			if (mapX < 0) this.x++;
 			if (mapX >= map.width) this.x--;
 		}
+
 		return this;
 	}
 
@@ -140,16 +141,10 @@ export class Figure extends SizedMatrix {
 		return false;
 	}
 
-	// Вычисляет цвет фигуры по сиду (0-255)
+	// Вычисляет цвет фигуры по сиду (0-8)
 	static getColor(randomSeed: number) {
-		const format = (a: number) => a.toString(16).substring(0, 2).padStart(2, "0");
-		const red = format(Math.floor(randomSeed * 248248));
-		const green = format(Math.floor(randomSeed * 124000));
-		const blue = format(Math.floor(randomSeed * 991230));
+		if (randomSeed === 0) return "transparent";
 
-		const randomColor = `#${red}${green}${blue}`;
-
-		if (randomColor === "#000000") return "transparent";
-		return randomColor;
+		return colors[randomSeed];
 	}
 }

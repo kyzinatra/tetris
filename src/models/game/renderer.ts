@@ -44,7 +44,6 @@ export class GameRenderer {
 		}
 
 		// Рисуем фигуры
-		console.log(map.figures);
 		for (let figure of map.figures) {
 			let { x: vX, y: vY } = figure;
 

@@ -53,7 +53,7 @@ export class GameEngine {
 		downMove: ["ArrowDown", "KeyS"],
 		drop: ["Tab", "KeyF"],
 		pause: ["Escape", "KeyP"],
-		restart: ["KeyR"],
+		restart: ["KeyR", "F5"],
 		hold: ["Space", "KeyE"],
 	});
 
@@ -163,20 +163,20 @@ export class GameEngine {
 		if (!this.#pause && classList.contains(pause)) classList.remove(pause);
 	}
 
+	// Метод для смены фигур в hold и наоборот
 	swipeFigure() {
 		if (!this.hold.figures.length) {
 			this.hold.push(this.currentFigure!.clone());
 			this.map.remove(this.currentFigure!);
-			this.newFigure(this.currentFigure!.x, this.currentFigure!.y);
-		} else {
-			const { x, y } = this.currentFigure!;
-			const holden = this.hold.figures[0].clone().setPosition(x, y).pushInBounds(this.map);
-			this.hold.clear();
-			this.hold.push(this.currentFigure!.clone());
-			this.map.remove(this.currentFigure!);
-			this.map.push(holden);
-			this.currentFigure = holden;
+			return this.newFigure(this.currentFigure!.x, this.currentFigure!.y);
 		}
+		const { x, y } = this.currentFigure!;
+		const holden = this.hold.figures[0].clone().setPosition(x, y).pushInBounds(this.map);
+		this.hold.clear();
+		this.hold.push(this.currentFigure!.clone());
+		this.map.remove(this.currentFigure!);
+		this.map.push(holden);
+		this.currentFigure = holden;
 	}
 
 	// Тут происходит обработка действий пользователя и рендер
@@ -188,6 +188,8 @@ export class GameEngine {
 
 		const { leftMove, restart, pause, rightMove, rotate, downMove, drop, hold } = this.#keys;
 
+		if (restart.isDown()) this.restart();
+
 		// Если игра на паузе, то делать нечего не нужно
 		if (pause.isSingle()) this.#pause = !this.#pause;
 		this.checkPause();
@@ -195,11 +197,12 @@ export class GameEngine {
 
 		let speed = this.speed; // скорость падения фигурки
 
-		if (restart.isDown()) this.restart();
 		if (downMove.isDown()) speed *= 10;
 
 		// Простые проверки на нажатие клавиш и вызов соответствующих методов
 		if (rotate.isSingle()) this.currentFigure!.rotate();
+		if (this.currentFigure?.haveCollision(this.map)) this.currentFigure?.back();
+
 		if (leftMove.isSingle()) this.currentFigure?.move(-1, 0);
 		if (rightMove.isSingle()) this.currentFigure?.move(1, 0);
 		if (drop.isSingle()) {
