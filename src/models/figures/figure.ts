@@ -1,9 +1,9 @@
-import { SizedMatrix } from "../../utils/sizedMatrix";
+import { Matrix } from "../utils/Matrix";
 import { colors } from "../constants/colors";
 import { GameMap } from "../game/map";
 import { Point } from "./point";
 
-export class Figure extends SizedMatrix {
+export class Figure extends Matrix {
 	x = 0;
 	y = 0;
 
@@ -17,7 +17,7 @@ export class Figure extends SizedMatrix {
 
 	clone() {
 		const figure = new Figure(this.width, this.height);
-		figure.map = this.clonedMap;
+		figure.map = this.cloneMap();
 		return figure;
 	}
 
@@ -63,7 +63,7 @@ export class Figure extends SizedMatrix {
 		this.prevState = {
 			x: this.x,
 			y: this.y,
-			map: this.clonedMap,
+			map: this.cloneMap(),
 			width: this.width,
 			height: this.height,
 		};

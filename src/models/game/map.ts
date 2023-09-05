@@ -1,8 +1,8 @@
-import { SizedMatrix } from "../../utils/sizedMatrix";
+import { Matrix } from "../utils/Matrix";
 import { Figure } from "../figures/figure";
 import { Point } from "../figures/point";
 
-export class GameMap extends SizedMatrix {
+export class GameMap extends Matrix {
 	figures: Figure[] = [];
 
 	constructor(width = 10, height = 20) {
@@ -30,7 +30,7 @@ export class GameMap extends SizedMatrix {
 	}
 
 	// фиксирует фигуру на карте
-	fix(figure: Figure) {
+	fixate(figure: Figure) {
 		this.remove(figure);
 		for (let [x, y, value] of figure.entries()) {
 			if (this.get(new Point(x + figure.x, y + figure.y))) continue;
@@ -38,7 +38,7 @@ export class GameMap extends SizedMatrix {
 			this.set(new Point(x + figure.x, y + figure.y), value);
 		}
 	}
-	// Очиащем нижнюю линию, если она полная b сдвигаем все элементы на 1 вниз
+	// Очищаем нижнюю линию, если она полная b сдвигаем все элементы на 1 вниз
 	clearLines() {
 		let counter = 0;
 		for (let y = 0; y < this.height; y++) {

@@ -1,3 +1,3 @@
-import { GameEngine } from "./models/game/engine";
+import { Engine } from "./models/game/engine";
 
-new GameEngine("#canvas_game").init();
+new Engine("#canvas_game").init();

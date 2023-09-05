@@ -1,12 +1,12 @@
 import { Figure } from "../figures/figure";
 import { GameMap } from "./map";
 
-export class GameRenderer {
+export class Renderer {
 	size: number = 30; // размер клетки в пикселях
 	ctx: CanvasRenderingContext2D;
 
-	constructor(private map: GameMap, private elem: HTMLCanvasElement, stratch = true) {
-		if (stratch) this.size = ~~(document.documentElement.clientHeight / map.height);
+	constructor(private map: GameMap, private elem: HTMLCanvasElement, stretch = true) {
+		if (stretch) this.size = ~~(document.documentElement.clientHeight / map.height);
 		const { width, height } = map;
 		const wSize = width * this.size;
 		const hSize = height * this.size;

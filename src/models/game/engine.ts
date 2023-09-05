@@ -1,10 +1,10 @@
 import { Figure } from "../figures/figure";
 import { GameMap } from "./map";
-import { GameRenderer } from "./renderer";
+import { Renderer } from "./renderer";
 import { getRandomFigure } from "../constants/figures";
 import { makeKeysListeners } from "../controllers/keys";
 
-export class GameEngine {
+export class Engine {
 	// Ставим счетчики на текущий счет, рекорд и сколько всего удалено линий
 	#score = 0;
 	#highScore = +(localStorage.getItem("highscore") ?? 0);
@@ -34,6 +34,7 @@ export class GameEngine {
 	get highScore() {
 		return this.#highScore;
 	}
+
 	set highScore(value) {
 		this.#highScore = value;
 		this.highScoreElement.querySelector("span")!.textContent = `${value}`;
@@ -69,9 +70,9 @@ export class GameEngine {
 	preview = new GameMap(4, 4);
 	hold = new GameMap(4, 4);
 
-	mapRenderer: GameRenderer | null = null;
-	previewRenderer: GameRenderer | null = null;
-	holdRenderer: GameRenderer | null = null;
+	mapRenderer: Renderer | null = null;
+	previewRenderer: Renderer | null = null;
+	holdRenderer: Renderer | null = null;
 
 	currentFigure: Figure | null = null;
 	nextFigure: Figure | null = null;
@@ -100,9 +101,9 @@ export class GameEngine {
 		if (!app) throw new Error("App element not found");
 
 		// создаем рендереры
-		this.mapRenderer = new GameRenderer(this.map, app);
-		this.previewRenderer = new GameRenderer(this.preview, preview, false);
-		this.holdRenderer = new GameRenderer(this.hold, hold, false);
+		this.mapRenderer = new Renderer(this.map, app);
+		this.previewRenderer = new Renderer(this.preview, preview, false);
+		this.holdRenderer = new Renderer(this.hold, hold, false);
 
 		// Первый рендер фигур
 		this.mapRenderer.render();
@@ -127,7 +128,7 @@ export class GameEngine {
 		if (this.#work) return;
 
 		this.#work = true;
-		this.tick();
+		this.frame();
 	}
 
 	resize(elem: HTMLCanvasElement) {
@@ -180,18 +181,18 @@ export class GameEngine {
 	}
 
 	// Тут происходит обработка действий пользователя и рендер
-	tick(time: number = performance.now()) {
+	frame(time: number = performance.now()) {
 		if (!this.#work) return;
 
 		// сразу просим следующий кадр
-		requestAnimationFrame(this.tick.bind(this));
+		requestAnimationFrame(this.frame.bind(this));
 
 		const { leftMove, restart, pause, rightMove, rotate, downMove, drop, hold } = this.#keys;
 
 		if (restart.isDown()) this.restart();
 
 		// Если игра на паузе, то делать нечего не нужно
-		if (pause.isSingle()) this.#pause = !this.#pause;
+		if (pause.isOnce()) this.#pause = !this.#pause;
 		this.checkPause();
 		if (this.#pause) return;
 
@@ -200,17 +201,17 @@ export class GameEngine {
 		if (downMove.isDown()) speed *= 10;
 
 		// Простые проверки на нажатие клавиш и вызов соответствующих методов
-		if (rotate.isSingle()) this.currentFigure!.rotate();
+		if (rotate.isOnce()) this.currentFigure!.rotate();
 		if (this.currentFigure?.haveCollision(this.map)) this.currentFigure?.back();
 
-		if (leftMove.isSingle()) this.currentFigure?.move(-1, 0);
-		if (rightMove.isSingle()) this.currentFigure?.move(1, 0);
-		if (drop.isSingle()) {
+		if (leftMove.isOnce()) this.currentFigure?.move(-1, 0);
+		if (rightMove.isOnce()) this.currentFigure?.move(1, 0);
+		if (drop.isOnce()) {
 			this.currentFigure?.drop(this.map);
 			time = this.#lastMoveTime + 600000 / speed; // чтобы сразу проверить столкновение
 		}
 
-		if (hold.isSingle()) this.swipeFigure();
+		if (hold.isOnce()) this.swipeFigure();
 
 		// Проверка на столкновение со стенками
 		if (this.currentFigure?.haveCollision(this.map)) this.currentFigure?.back();
@@ -233,7 +234,7 @@ export class GameEngine {
 				}
 
 				// Если фигурка столкнулась с чем-то, то фиксируем ее на карте
-				this.map.fix(this.currentFigure);
+				this.map.fixate(this.currentFigure);
 				const deleted = this.map.clearLines();
 				this.newFigure();
 				this.score += 1000;

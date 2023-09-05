@@ -1,13 +1,13 @@
-import { Point } from "../models/figures/point";
+import { Point } from "../figures/point";
 
 type TEntry = [number, number, number];
 
-export class SizedMatrix {
+export class Matrix {
 	width = 0;
 	height = 0;
 	map: Uint8Array;
 
-	get clonedMap() {
+	cloneMap() {
 		return new Uint8Array(this.map);
 	}
 
@@ -19,13 +19,13 @@ export class SizedMatrix {
 
 	// возвращает массив с координатами и значением каждого элемента массива
 	entries() {
-		const { width, map: m } = this;
-		const output = new Array<TEntry>(m.length);
+		const { width, map } = this;
+		const output = new Array<TEntry>(map.length);
 
-		for (let i = 0; i < m.length; i++) {
+		for (let i = 0; i < map.length; i++) {
 			let x = i % width;
 			let y = (i - x) / width;
-			let value = m[i];
+			let value = map[i];
 
 			output[i] = [x, y, value];
 		}
