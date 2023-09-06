@@ -1,0 +1,13 @@
+services:
+  frontend:
+    image: tetris-frontend
+    build:
+      context: ./
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - tetris
+
+networks:
+  tetris:
