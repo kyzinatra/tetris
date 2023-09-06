@@ -14,7 +14,7 @@ type TRController<T> = { [key in keyof T]: KeyController };
 const PressedKeys = new Map<string, boolean>();
 
 document.addEventListener("keydown", (e) => {
-	e.preventDefault();
+	if (e.key === "Tab") e.preventDefault();
 	PressedKeys.set(e.code, true);
 });
 document.addEventListener("keyup", (e) => {

@@ -26,6 +26,21 @@
 				</div>
 			</div>
 		</div>
+		<dialog id="get_user">
+			<form>
+				<h1>Введите имя пользователя:</h1>
+				<input autocomplete="username" type="text" minlength="3" name="username" />
+				<button type="submit">Сохранить</button>
+			</form>
+		</dialog>
+
+		<dialog id="records">
+			<form>
+				<h1>Игра окончена:</h1>
+				<h2>Таблица рекордов:</h2>
+				<div id="records_content"></div>
+			</form>
+		</dialog>
 		<script type="module" src="/src/index.ts"></script>
 	</body>
 </html>

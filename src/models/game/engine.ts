@@ -2,68 +2,21 @@ import { Figure } from "../figures/figure";
 import { GameMap } from "./map";
 import { Renderer } from "./renderer";
 import { getRandomFigure } from "../constants/figures";
-import { makeKeysListeners } from "../controllers/keys";
+import { Layout } from "./layout";
+import { numberFormatter } from "../../utils/number-formatter";
 
-export class Engine {
+export class Engine extends Layout {
 	// Ставим счетчики на текущий счет, рекорд и сколько всего удалено линий
-	#score = 0;
-	#highScore = +(localStorage.getItem("highscore") ?? 0);
-	#deletedLines = 0;
 	#pause = true;
 	#work = false;
 
 	#renderedFigures = 0;
 	#lastMoveTime = performance.now();
 
-	get score() {
-		return this.#score;
-	}
-	set score(value) {
-		this.#score = value;
-		this.scoreElement.querySelector("span")!.textContent = `${value}`;
-	}
-
-	get lines() {
-		return this.#deletedLines;
-	}
-	set lines(value) {
-		this.#deletedLines = value;
-		this.linesElement.querySelector("span")!.textContent = `${value}`;
-	}
-
-	get highScore() {
-		return this.#highScore;
-	}
-
-	set highScore(value) {
-		this.#highScore = value;
-		this.highScoreElement.querySelector("span")!.textContent = `${value}`;
-		localStorage.setItem("highscore", `${value}`);
-	}
-
 	// Скорость падения фигурки
 	get speed() {
-		return 600 + ~~this.#deletedLines * 15;
+		return 500 + this.deletedLines * 15;
 	}
-
-	// Создаем объект с названиями клавиш и их кодами. makeKeysListeners - отслеживает нажатие клавиш
-	#keys = makeKeysListeners({
-		rightMove: ["ArrowRight", "KeyD"],
-		leftMove: ["ArrowLeft", "KeyA"],
-		rotate: ["ArrowUp", "KeyW"],
-		downMove: ["ArrowDown", "KeyS"],
-		drop: ["Tab", "KeyF"],
-		pause: ["Escape", "KeyP"],
-		restart: ["KeyR", "F5"],
-		hold: ["Space", "KeyE"],
-	});
-
-	// Элементы информации
-	scoreElement = document.getElementById("score") as HTMLParagraphElement;
-	highScoreElement = document.getElementById("highScore") as HTMLParagraphElement;
-	linesElement = document.getElementById("lines") as HTMLParagraphElement;
-	pauseElement = document.getElementById("pause") as HTMLButtonElement;
-	contentElement = document.getElementById("content") as HTMLDivElement;
 
 	// Создаем карту и превью элемента (следующий элемент)
 	map = new GameMap();
@@ -78,23 +31,36 @@ export class Engine {
 	nextFigure: Figure | null = null;
 
 	newFigure(x?: number, y?: number) {
-		if (this.nextFigure) this.preview.remove(this.nextFigure);
-
-		this.currentFigure = this.nextFigure ?? getRandomFigure(this.#renderedFigures++);
-		this.nextFigure = getRandomFigure(this.#renderedFigures++);
-
 		let newX = x || 4;
 		let newY = y || 0;
 
-		this.map.push(this.currentFigure.setPosition(newX, newY).pushInBounds(this.map));
+		this.currentFigure = (this.nextFigure ?? getRandomFigure(this.#renderedFigures++))
+			.setPosition(newX, newY)
+			.pushInBounds(this.map);
+		this.nextFigure = getRandomFigure(this.#renderedFigures++);
+
+		// Если фигурка не помещается в начальную позицию, то игра окончена
+		if (this.currentFigure.haveCollision(this.map)) {
+			console.log("stop");
+			this.stop();
+			return this.stopGame(this.restart.bind(this));
+		}
+
+		this.map.push(this.currentFigure);
 		this.preview.clear()!.push(this.nextFigure);
 	}
 
+	render() {
+		this.mapRenderer?.render(this.speed);
+		this.previewRenderer?.render(this.speed);
+		this.holdRenderer?.render(this.speed);
+	}
 	// конструктор new
 	constructor(appSelector: string) {
+		super();
 		// ищем элемент по селектору
 		const app = document.querySelector(appSelector) as HTMLCanvasElement;
-		const preview = document.querySelector("#canvas_preview") as HTMLCanvasElement;
+		const preview = document.getElementById("canvas_preview") as HTMLCanvasElement;
 		const hold = document.getElementById("canvas_hold") as HTMLCanvasElement;
 
 		// если элемент не найден, то выкидываем ошибку
@@ -106,15 +72,13 @@ export class Engine {
 		this.holdRenderer = new Renderer(this.hold, hold, false);
 
 		// Первый рендер фигур
-		this.mapRenderer.render();
-		this.previewRenderer.render();
-		this.holdRenderer.render();
+		this.render();
 
 		// создаем фигуры
 		this.newFigure();
 
 		// обновляем счетчик лучшего результата
-		this.highScoreElement.querySelector("span")!.textContent = `${this.#highScore}`;
+		this.highScoreElement.querySelector("span")!.textContent = `${numberFormatter(this.highScore)}`;
 
 		// добавляем обработчики событий на изменение размера окна и потерю фокуса
 		addEventListener("resize", this.resize.bind(this, app));
@@ -171,8 +135,13 @@ export class Engine {
 			this.map.remove(this.currentFigure!);
 			return this.newFigure(this.currentFigure!.x, this.currentFigure!.y);
 		}
+
 		const { x, y } = this.currentFigure!;
 		const holden = this.hold.figures[0].clone().setPosition(x, y).pushInBounds(this.map);
+		// Мы стараемся ее поставить так, чтобы она не выходила за границы карты
+		// но если она выходит, то просто не судьба
+		if (holden.haveCollision(this.map)) return;
+
 		this.hold.clear();
 		this.hold.push(this.currentFigure!.clone());
 		this.map.remove(this.currentFigure!);
@@ -187,7 +156,8 @@ export class Engine {
 		// сразу просим следующий кадр
 		requestAnimationFrame(this.frame.bind(this));
 
-		const { leftMove, restart, pause, rightMove, rotate, downMove, drop, hold } = this.#keys;
+		const { leftMove, restart, pause, rightMove, rotate, downMove, drop, hold } = this.keys;
+		let isDropped = false;
 
 		if (restart.isDown()) this.restart();
 
@@ -208,7 +178,7 @@ export class Engine {
 		if (rightMove.isOnce()) this.currentFigure?.move(1, 0);
 		if (drop.isOnce()) {
 			this.currentFigure?.drop(this.map);
-			time = this.#lastMoveTime + 600000 / speed; // чтобы сразу проверить столкновение
+			isDropped = true; // чтобы сразу проверить столкновение
 		}
 
 		if (hold.isOnce()) this.swipeFigure();
@@ -217,7 +187,7 @@ export class Engine {
 		if (this.currentFigure?.haveCollision(this.map)) this.currentFigure?.back();
 
 		// Тут проверка на фиксацию фигурки и окончание игры
-		if (time >= this.#lastMoveTime + 600000 / speed) {
+		if (time >= this.#lastMoveTime + 600000 / speed || isDropped) {
 			// Если прошло больше чем 600000 / speed , то фигурка падает вниз на 1 клетку
 			this.currentFigure?.move(0, 1);
 			this.#lastMoveTime = time;
@@ -226,25 +196,15 @@ export class Engine {
 			if (this.currentFigure?.haveCollision(this.map)) {
 				this.currentFigure.back();
 
-				// Если фигурка столкнулась с верхней границей, то игра окончена
-				if (this.currentFigure.haveTopCollision(this.map)) {
-					this.stop();
-					alert("Game over");
-					return this.restart();
-				}
-
 				// Если фигурка столкнулась с чем-то, то фиксируем ее на карте
 				this.map.fixate(this.currentFigure);
 				const deleted = this.map.clearLines();
 				this.newFigure();
 				this.score += 1000;
-				this.lines += deleted;
-				this.highScore = Math.max(+(localStorage.getItem("highscore") || 0), this.score);
+				this.deletedLines += deleted;
+				this.highScore = this.score;
 			}
 		}
-
-		this.mapRenderer!.render();
-		this.previewRenderer!.render();
-		this.holdRenderer!.render();
+		this.render();
 	}
 }

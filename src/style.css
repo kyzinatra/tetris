@@ -83,3 +83,68 @@ body {
 	background-color: rgba(50, 50, 50, 0.5);
 	cursor: pointer;
 }
+
+dialog::backdrop {
+	background-color: rgba(0, 0, 0, 0.7);
+}
+
+dialog {
+	background-color: #242424;
+	border-radius: 5px;
+	padding: 20px;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+}
+
+dialog[open] {
+	opacity: 1;
+}
+
+#get_user form,
+#records form {
+	display: flex;
+	flex-direction: column;
+	gap: 30px;
+	padding: 10px 50px;
+}
+
+#get_user h1,
+#records h1 {
+	font-size: 2rem;
+	margin: 0;
+}
+
+#get_user input {
+	padding: 3px 15px;
+	font-size: 1.5rem;
+	border: none;
+	border-radius: 5px;
+	background-color: #333;
+	color: #fff;
+	font-weight: 500;
+}
+
+#get_user button {
+	padding: 10px 20px;
+	border: none;
+	border-radius: 5px;
+	background-color: #646cff;
+	color: #fff;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+#records h2 {
+	margin: 0;
+	font-size: 1.5rem;
+}
+
+#records ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	font-size: 1.2rem;
+}
+#records li {
+	padding: 5px;
+}

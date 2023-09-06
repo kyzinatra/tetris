@@ -15,6 +15,8 @@ export class Figure extends Matrix {
 		height: this.height,
 	};
 
+	easeIn: number = 0;
+
 	clone() {
 		const figure = new Figure(this.width, this.height);
 		figure.map = this.cloneMap();
@@ -32,7 +34,7 @@ export class Figure extends Matrix {
 	static make(color: number, ...rows: string[]) {
 		const figure = new Figure(Math.max(...rows.map((a) => a.length)), rows.length);
 
-		for (let [x, y] of figure.entries()) {
+		for (let [x, y] of figure) {
 			const value = rows[y][x] != " " && rows[y][x] != "0";
 			figure.set(new Point(x, y), value ? color : 0);
 		}
@@ -46,7 +48,7 @@ export class Figure extends Matrix {
 		// Разворачиваем и размеры новой матрицы
 		const newFigure = new Figure(height, width);
 
-		for (let [x, y, value] of this.entries()) {
+		for (let [x, y, value] of this) {
 			const newX = height - y - 1;
 			const newY = x;
 
@@ -81,7 +83,7 @@ export class Figure extends Matrix {
 
 	move(x: number, y: number) {
 		this.save();
-
+		if (y === 1) this.easeIn += 1;
 		this.x += x;
 		this.y += y;
 	}
@@ -95,8 +97,7 @@ export class Figure extends Matrix {
 	}
 
 	pushInBounds(map: GameMap) {
-		this.save();
-		for (let [x, _, value] of this.entries()) {
+		for (let [x, _, value] of this) {
 			if (!value) continue;
 
 			const mapX = this.x + x;
@@ -114,7 +115,7 @@ export class Figure extends Matrix {
 		return this;
 	}
 	haveCollision(map: GameMap) {
-		for (let [x, y, value] of this.entries()) {
+		for (let [x, y, value] of this) {
 			if (!value) continue;
 
 			const mapX = this.x + x;
@@ -125,18 +126,6 @@ export class Figure extends Matrix {
 			if (mapY >= map.height) return true;
 
 			if (map.get(new Point(mapX, mapY))) return true;
-		}
-		return false;
-	}
-
-	haveTopCollision(map: GameMap) {
-		for (let [x, y, value] of this.entries()) {
-			if (!value) continue;
-
-			const mapX = this.x + x;
-			const mapY = this.y + y;
-
-			if (mapY < 0 || map.get(new Point(mapX, mapY))) return true;
 		}
 		return false;
 	}

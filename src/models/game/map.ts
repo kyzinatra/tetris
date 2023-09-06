@@ -32,7 +32,7 @@ export class GameMap extends Matrix {
 	// фиксирует фигуру на карте
 	fixate(figure: Figure) {
 		this.remove(figure);
-		for (let [x, y, value] of figure.entries()) {
+		for (let [x, y, value] of figure) {
 			if (this.get(new Point(x + figure.x, y + figure.y))) continue;
 			// получаем точку фигуры на карте и фиксируем ее значение. Саму фигуру удаляем
 			this.set(new Point(x + figure.x, y + figure.y), value);

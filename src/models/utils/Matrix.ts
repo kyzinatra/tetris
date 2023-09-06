@@ -17,20 +17,17 @@ export class Matrix {
 		this.height = height;
 	}
 
-	// возвращает массив с координатами и значением каждого элемента массива
-	entries() {
+	// итератор с координатами и значением каждого элемента массива
+	*[Symbol.iterator](): Generator<TEntry> {
 		const { width, map } = this;
-		const output = new Array<TEntry>(map.length);
 
 		for (let i = 0; i < map.length; i++) {
 			let x = i % width;
 			let y = (i - x) / width;
 			let value = map[i];
 
-			output[i] = [x, y, value];
+			yield [x, y, value];
 		}
-
-		return output;
 	}
 
 	index(index: number | Point): number {
