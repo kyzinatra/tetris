@@ -1,7 +1,7 @@
 import { numberFormatter } from "../../utils/number-formatter";
 import { Modal } from "../components/modal";
-import { makeKeysListeners } from "../controllers/keys";
-import { GameStorage } from "../controllers/storage";
+import { makeKeysListeners } from "../figures/controllers/keys";
+import { GameStorage } from "../figures/controllers/storage";
 
 export class Layout {
 	// Создаем объект с названиями клавиш и их кодами. makeKeysListeners - отслеживает нажатие клавиш

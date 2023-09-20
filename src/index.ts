@@ -1,5 +1,5 @@
 import { Modal } from "./models/components/modal";
-import { GameStorage } from "./models/controllers/storage";
+import { GameStorage } from "./models/figures/controllers/storage";
 import { Engine } from "./models/game/engine";
 import { random } from "./utils/random";
 

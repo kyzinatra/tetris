@@ -109,9 +109,10 @@ export class Figure extends Matrix {
 	}
 
 	setPosition(x: number, y: number) {
+		this.save();
+
 		this.x = x;
 		this.y = y;
-		this.save();
 		return this;
 	}
 	haveCollision(map: GameMap) {

@@ -22,9 +22,9 @@ export class Matrix {
 		const { width, map } = this;
 
 		for (let i = 0; i < map.length; i++) {
-			let x = i % width;
-			let y = (i - x) / width;
-			let value = map[i];
+			const x = i % width;
+			const y = (i - x) / width;
+			const value = map[i];
 
 			yield [x, y, value];
 		}
