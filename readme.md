@@ -40,7 +40,6 @@ npm run preview
 
 ```
 
-
 ## Запустить nginx
 
 1. Скачайте [docker](https://www.docker.com/) с оффициального сайта
